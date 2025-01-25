@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #90a3e0, #b1cc74);
+            color: white;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        h1, h2 {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            margin: 20px auto;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #61dafb;
+            background-color: #4b6cb7;
+            font-size: 2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .cell:hover {
+            background-color: #182848;
+            transform: scale(1.05);
+        }
+
+        .winning-cell {
+            background-color: #d9534f !important;
+            transition: background-color 1s;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        #restartBtn {
+            background-color: #61dafb;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        #restartBtn:hover {
+            background-color: #4fa3d1;
+        }
+
+        #homeScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #startBtn {
+            background-color: #61dafb;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        #startBtn:hover {
+            background-color: #4fa3d1;
+        }
+    </style>
+</head>
+<body>
+
+<div id="homeScreen">
+    <h1>Welcome to Tic Tac Toe</h1>
+    <button id="startBtn" onclick="startGame()">Start Game</button>
+</div>
+
+<div id="gameScreen" style="display: none;">
+    <h2 id="message"></h2>
+    <div id="board"></div>
+    <button id="restartBtn" onclick="restartGame()">Restart Game</button>
+</div>
+
+<script>
+    let currentPlayer = 'X';
+    let gameBoard = ['', '', '', '', '', '', '', '', ''];
+    const homeScreen = document.getElementById('homeScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const boardElement = document.getElementById('board');
+    const messageElement = document.getElementById('message');
+
+    // Create the game board
+    for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+        cell.addEventListener('click', handleCellClick);
+        boardElement.appendChild(cell);
+    }
+
+    function startGame() {
+        homeScreen.style.display = 'none';
+        gameScreen.style.display = 'block';
+        resetGame();
+    }
+
+    // Handle cell click event
+    function handleCellClick(event) {
+        const index = event.target.dataset.index;
+
+        // Check if the cell is empty and the game is still ongoing
+        if (gameBoard[index] === '' && !isGameOver()) {
+            gameBoard[index] = currentPlayer;
+            event.target.textContent = currentPlayer;
+            
+            // Check if the current player wins
+            if (checkWinner()) {
+                const winningCells = getWinningCells();
+                highlightWinningCells(winningCells);
+                messageElement.innerHTML = `Player ${currentPlayer} wins!`;
+                setTimeout(() => {
+                    resetGame();
+                }, 2000); // Auto-restart after 2 seconds
+            } else if (isBoardFull()) {
+                // Check if the board is full (tie)
+                messageElement.textContent = 'It\'s a tie!';
+                setTimeout(() => {
+                    resetGame();
+                }, 2000); // Auto-restart after 2 seconds
+            } else {
+                // Switch to the next player
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                messageElement.textContent = `Player ${currentPlayer}'s turn`;
+            }
+        }
+    }
+
+    // Check for a winner
+    function checkWinner() {
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        for (const combo of winningCombinations) {
+            const [a, b, c] = combo;
+            if (gameBoard[a] !== '' && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Get the winning cells
+    function getWinningCells() {
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]             // Diagonals
+        ];
+
+        for (const combo of winningCombinations) {
+            const [a, b, c] = combo;
+            if (gameBoard[a] !== '' && gameBoard[a] === gameBoard[b] && gameBoard[a] === gameBoard[c]) {
+                return [a, b, c];
+            }
+        }
+
+        return [];
+    }
+
+    // Highlight the winning cells
+    function highlightWinningCells(winningCells) {
+        winningCells.forEach(index => {
+            const cell = boardElement.children[index];
+            cell.classList.add('winning-cell');
+        });
+    }
+
+    // Check if the board is full (tie)
+    function isBoardFull() {
+        return gameBoard.every(cell => cell !== '');
+    }
+
+    // Check if the game is over
+    function isGameOver() {
+        return checkWinner() || isBoardFull();
+    }
+
+    // Restart the game
+    function restartGame() {
+        resetGame();
+    }
+
+    // Reset the game
+    function resetGame() {
+        gameBoard = ['', '', '', '', '', '', '', '', ''];
+        currentPlayer = 'X';
+        messageElement.textContent = `Player ${currentPlayer}'s turn`;
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.textContent = '';
+            cell.classList.remove('winning-cell');
+        });
+    }
+</script>
+
+</body>
+</html>
